@@ -1,10 +1,13 @@
+'use client';
+
+import React from 'react';
 import Image from "next/image";
 
 export default function SpecsPage() {
   return (
-    <main className="min-h-screen bg-black text-white pt-24">
+    <main className="min-h-screen bg-black text-white pt-20">
       {/* Hero Section */}
-      <section className="relative py-20">
+      <section className="relative py-12">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-black to-black"></div>
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
@@ -12,16 +15,16 @@ export default function SpecsPage() {
               技术规格
             </h1>
             <p className="text-xl text-gray-300 leading-relaxed">
-              采用最新的人工智能和硬件技术，为视障人士提供全方位的智能辅助服务
+              采用最新的人工智能和硬件技术，为视障人士提供全方位的智能辅助服务。搭载高通骁龙XR2处理器，配备4K超高清摄像头和AI专用神经网络加速器，实现毫秒级响应。
             </p>
           </div>
         </div>
       </section>
 
       {/* Hardware Specs */}
-      <section className="py-20 relative">
+      <section className="py-16 relative">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold mb-16 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+          <h2 className="text-4xl font-bold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
             硬件规格
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -29,55 +32,67 @@ export default function SpecsPage() {
               {
                 title: "处理器",
                 specs: [
-                  "主处理器: 高通骁龙XR2",
-                  "AI协处理器: 神经网络加速器",
-                  "图像处理器: ISP 2.0",
-                  "计算能力: 15 TOPS"
+                  "主处理器: 高通骁龙XR2 @2.84GHz",
+                  "AI协处理器: 神经网络加速器 15 TOPS",
+                  "图像处理器: ISP 2.0 2.7GP/s",
+                  "计算能力: 8核心AI引擎",
+                  "内存: 8GB LPDDR5",
+                  "存储: 128GB UFS 3.1"
                 ]
               },
               {
                 title: "摄像头",
                 specs: [
-                  "分辨率: 4K@30fps",
-                  "视场角: 120°",
-                  "夜视: 支持",
-                  "深度感知: ToF传感器"
+                  "分辨率: 4K@30fps HDR10+",
+                  "视场角: 120° 超广角",
+                  "夜视: 超感光夜视2.0",
+                  "深度感知: ToF+结构光双系统",
+                  "图像防抖: 6轴防抖",
+                  "对焦系统: PDAF相位对焦"
                 ]
               },
               {
                 title: "音频系统",
                 specs: [
-                  "骨传导扬声器: 双通道",
-                  "麦克风: 4个阵列式",
-                  "降噪: 主动降噪",
-                  "音频编解码: aptX HD"
+                  "骨传导扬声器: 双通道高保真",
+                  "麦克风: 4个阵列式波束成形",
+                  "降噪: AI主动降噪 35dB",
+                  "音频编解码: aptX HD/LDAC",
+                  "语音识别: 远场拾音5米",
+                  "空间音频: 360°全景声"
                 ]
               },
               {
                 title: "传感器",
                 specs: [
-                  "IMU: 9轴传感器",
-                  "光线传感器: 环境光感应",
-                  "距离传感器: 超声波",
-                  "气压计: 高精度"
+                  "IMU: 9轴高精度传感器",
+                  "光线传感器: 双光谱环境感应",
+                  "距离传感器: 毫米波雷达",
+                  "气压计: 高精度气压高度计",
+                  "生物传感器: 心率/体温监测",
+                  "姿态检测: 6DoF运动追踪"
                 ]
               },
               {
                 title: "连接",
                 specs: [
-                  "Wi-Fi: 6E",
-                  "蓝牙: 5.2",
-                  "GPS: 双频",
-                  "5G: 可选支持"
+                  "Wi-Fi: 6E 三频段",
+                  "蓝牙: 5.2 低功耗",
+                  "GPS: 双频+北斗+伽利略",
+                  "5G: SA/NSA双模",
+                  "NFC: 支持读写",
+                  "USB: Type-C 3.2"
                 ]
               },
               {
                 title: "电池",
                 specs: [
-                  "容量: 2500mAh",
-                  "快充: 支持18W",
-                  "续航: 12小时",
-                  "无线充电: 支持"
+                  "容量: 2500mAh高密度电池",
+                  "快充: 支持18W快充",
+                  "续航: 12小时持续使用",
+                  "无线充电: Qi 15W",
+                  "紧急模式: 24小时待机",
+                  "电池健康: 智能电量管理"
                 ]
               }
             ].map((spec, index) => (
@@ -103,7 +118,7 @@ export default function SpecsPage() {
       </section>
 
       {/* Software Specs */}
-      <section className="py-20 relative">
+      <section className="py-16 relative">
         <div className="container mx-auto px-6">
           <h2 className="text-4xl font-bold mb-16 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
             软件规格
@@ -120,19 +135,34 @@ export default function SpecsPage() {
                     <div>
                       <h4 className="text-lg font-medium mb-3 text-white">视觉识别模型</h4>
                       <ul className="space-y-2 text-gray-400">
-                        <li>• 支持200+物体类别实时识别</li>
-                        <li>• OCR文字识别准确率99%</li>
-                        <li>• 人脸识别支持1:N匹配</li>
-                        <li>• 场景理解覆盖50+场景</li>
+                        <li>• 支持200+物体类别实时识别，准确率达98%</li>
+                        <li>• OCR文字识别支持多语言，精度99%</li>
+                        <li>• 人脸识别支持1:N匹配，响应时间小于100ms</li>
+                        <li>• 场景理解覆盖50+常见场景</li>
+                        <li>• 深度估计精度达厘米级</li>
+                        <li>• 动态物体追踪与预测</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="text-lg font-medium mb-3 text-white">语音处理模型</h4>
                       <ul className="space-y-2 text-gray-400">
-                        <li>• 支持多语言实时语音识别</li>
-                        <li>• 环境声音分类准确率95%</li>
+                        <li>• 支持中英日韩等多语言实时识别</li>
+                        <li>• 环境声音分类准确率95%以上</li>
                         <li>• 语音合成自然度评分4.8/5</li>
-                        <li>• 支持离线语音识别</li>
+                        <li>• 支持离线语音识别核心功能</li>
+                        <li>• 方言识别支持8种中国方言</li>
+                        <li>• 声纹识别与说话人分离</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-medium mb-3 text-white">导航定位模型</h4>
+                      <ul className="space-y-2 text-gray-400">
+                        <li>• 室内定位精度达厘米级</li>
+                        <li>• 实时路径规划与动态避障</li>
+                        <li>• 支持多层建筑室内导航</li>
+                        <li>• 公共交通实时信息集成</li>
+                        <li>• 紧急情况备用路线规划</li>
+                        <li>• 支持离线地图数据</li>
                       </ul>
                     </div>
                   </div>
@@ -149,18 +179,18 @@ export default function SpecsPage() {
                     <div>
                       <h4 className="text-lg font-medium mb-3 text-white">响应速度</h4>
                       <ul className="space-y-2 text-gray-400">
-                        <li>• 图像识别延迟: &lt;100ms</li>
-                        <li>• 语音识别延迟: &lt;200ms</li>
-                        <li>• 系统启动时间: &lt;2s</li>
-                        <li>• UI响应时间: &lt;50ms</li>
+                        <li>• 图像识别延迟: 小于100ms</li>
+                        <li>• 语音识别延迟: 小于200ms</li>
+                        <li>• 系统启动时间: 小于2s</li>
+                        <li>• UI响应时间: 小于50ms</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="text-lg font-medium mb-3 text-white">资源占用</h4>
                       <ul className="space-y-2 text-gray-400">
-                        <li>• 内存占用: &lt;4GB</li>
-                        <li>• CPU使用率: &lt;30%</li>
-                        <li>• GPU使用率: &lt;40%</li>
+                        <li>• 内存占用: 小于4GB</li>
+                        <li>• CPU使用率: 小于30%</li>
+                        <li>• GPU使用率: 小于40%</li>
                         <li>• 存储空间: 64GB</li>
                       </ul>
                     </div>
@@ -229,7 +259,7 @@ export default function SpecsPage() {
       </section>
 
       {/* Compatibility */}
-      <section className="py-20 relative">
+      <section className="py-16 relative">
         <div className="container mx-auto px-6">
           <h2 className="text-4xl font-bold mb-16 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
             兼容性

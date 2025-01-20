@@ -132,7 +132,7 @@ export default function AdminDashboard() {
       {/* Top Bar */}
       <div className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-3">
             <h1 className="text-2xl font-bold text-white">智能眼镜管理平台</h1>
             <Link 
               href="/"
@@ -145,9 +145,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
             <div className="text-gray-400 mb-2">活跃用户</div>
             <div className="text-3xl font-bold text-white">{mockData.activeUsers}</div>
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-4 mb-6 border-b border-gray-700">
+        <div className="flex space-x-4 mb-4 border-b border-gray-700">
           <button
             className={`px-4 py-2 font-medium ${
               selectedTab === 'overview'
@@ -216,11 +216,11 @@ export default function AdminDashboard() {
 
         {/* Tab Content */}
         {selectedTab === 'overview' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Active Users */}
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-              <h3 className="text-lg font-medium text-white mb-4">活跃用户列表</h3>
-              <div className="space-y-4">
+            <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+              <h3 className="text-lg font-medium text-white mb-3">活跃用户列表</h3>
+              <div className="space-y-3">
                 {mockUsers.map(user => (
                   <div key={user.id} className="bg-gray-700/50 rounded-lg p-6">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

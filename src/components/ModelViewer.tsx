@@ -9,7 +9,7 @@ interface ModelViewerProps {
 }
 
 function Model({ isFullscreen = false }) {
-  const { scene } = useGLTF('/model/smart_glasses_0119130229_texture.gltf');
+  const { scene } = useGLTF('/model/Reflections_on_the_Ta_0120030012_texture.gltf');
   return (
     <>
       <ambientLight intensity={isFullscreen ? 2.5 : 1.5} />
