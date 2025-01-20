@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
 const ModelViewer = dynamic(() => import('../../components/ModelViewer'), {
@@ -15,9 +15,30 @@ const ModelViewer = dynamic(() => import('../../components/ModelViewer'), {
 export default function ProductPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const handleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
+  const handleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      // 进入全屏
+      const modelContainer = document.getElementById('model-container');
+      if (modelContainer) {
+        modelContainer.requestFullscreen().catch((err) => {
+          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      }
+    } else {
+      // 退出全屏
+      document.exitFullscreen();
+    }
+  }, []);
+
+  // 监听全屏状态变化
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   return (
     <main className="min-h-screen bg-black text-white pt-24">
@@ -68,27 +89,24 @@ export default function ProductPage() {
                 <span className="relative z-10 text-lg font-medium">立即预约</span>
               </button>
             </div>
-            <div className={`relative group ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+            <div id="model-container" className="relative group">
               <ModelViewer isFullscreen={isFullscreen} />
-              {isFullscreen ? (
-                <button
-                  onClick={handleFullscreen}
-                  className="absolute top-4 right-4 p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors z-10"
-                >
+              <button
+                onClick={handleFullscreen}
+                className={`absolute top-4 right-4 p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors ${
+                  isFullscreen ? 'z-10' : 'opacity-0 group-hover:opacity-100'
+                }`}
+              >
+                {isFullscreen ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </button>
-              ) : (
-                <button
-                  onClick={handleFullscreen}
-                  className="absolute top-4 right-4 p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors opacity-0 group-hover:opacity-100"
-                >
+                ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                   </svg>
-                </button>
-              )}
+                )}
+              </button>
               <div className={`absolute -inset-4 blur-3xl bg-blue-500/20 rounded-full animate-pulse ${isFullscreen ? 'hidden' : ''}`}></div>
             </div>
           </div>
