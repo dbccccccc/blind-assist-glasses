@@ -193,11 +193,105 @@ const scenarios = [
   }
 ];
 
+// 修改动画配置
+const fadeInUpVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const fadeInVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 }
+};
+
+const slideUpVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0 }
+};
+
+// 修改 OverviewContent 组件，传递 isFullscreen 状态
+const OverviewContent = ({ 
+  handleFullscreen, 
+  isFullscreen 
+}: { 
+  handleFullscreen: () => void;
+  isFullscreen: boolean;
+}) => (
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <span className="text-blue-400 text-sm tracking-wider font-medium">
+          SMART ASSISTANT GLASSES
+        </span>
+        <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
+          智能辅助眼镜
+        </h1>
+        <p className="text-xl text-gray-400 max-w-xl">
+          采用先进的AI技术和精密的硬件设计，为视障人士提供全方位的生活辅助体验
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20">
+          <div className="text-blue-400 font-semibold">12h</div>
+          <div className="text-sm text-gray-400">续航时间</div>
+        </div>
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20">
+          <div className="text-purple-400 font-semibold">IP67</div>
+          <div className="text-sm text-gray-400">防水等级</div>
+        </div>
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-transparent border border-cyan-500/20">
+          <div className="text-cyan-400 font-semibold">128g</div>
+          <div className="text-sm text-gray-400">整机重量</div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="model-container" className="relative group">
+      <div className={`absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-500 ${isFullscreen ? 'hidden' : ''}`}></div>
+      <div className="relative">
+        <ModelViewer isFullscreen={isFullscreen} />
+        <button
+          onClick={handleFullscreen}
+          className={`absolute top-4 right-4 p-2 rounded-xl bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 ${
+            isFullscreen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          {isFullscreen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// 添加防抖函数
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
 export default function ProductPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const sectionsRef = useRef<(HTMLDivElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastScrollTime = useRef<number>(0);
 
   const sections = [
     { id: 'overview', title: '概览' },
@@ -207,50 +301,62 @@ export default function ProductPage() {
     { id: 'scenarios', title: '场景' }
   ];
 
-  // 处理滚动逻辑
+  // 优化滚动处理逻辑
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
+      
+      if (isTransitioning || isFullscreen) return;
+
+      const now = Date.now();
+      if (now - lastScrollTime.current < 1000) return; // 1秒内不重复触发
+
       const delta = e.deltaY;
+      const threshold = 50;
+
+      if (Math.abs(delta) < threshold) return;
+
       if (delta > 0 && currentSection < sections.length - 1) {
+        setIsTransitioning(true);
         setCurrentSection(prev => prev + 1);
+        lastScrollTime.current = now;
       } else if (delta < 0 && currentSection > 0) {
+        setIsTransitioning(true);
         setCurrentSection(prev => prev - 1);
+        lastScrollTime.current = now;
       }
     };
+
+    const handleTransitionEnd = debounce(() => {
+      setIsTransitioning(false);
+    }, 1000);
 
     const container = containerRef.current;
     if (container) {
       container.addEventListener('wheel', handleWheel, { passive: false });
+      container.addEventListener('transitionend', handleTransitionEnd as any);
     }
 
     return () => {
       if (container) {
         container.removeEventListener('wheel', handleWheel);
+        container.removeEventListener('transitionend', handleTransitionEnd as any);
       }
     };
-  }, [currentSection, sections.length]);
+  }, [currentSection, sections.length, isTransitioning, isFullscreen]);
 
-  // 滚动到当前部分
+  // 移除不必要的滚动效果
   useEffect(() => {
-    sectionsRef.current[currentSection]?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
+    const section = sectionsRef.current[currentSection];
+    if (section) {
+      section.style.visibility = 'visible';
+      section.style.opacity = '1';
+    }
   }, [currentSection]);
 
   // 全屏处理逻辑
   const handleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      const modelContainer = document.getElementById('model-container');
-      if (modelContainer) {
-        modelContainer.requestFullscreen().catch((err) => {
-          console.error(`Error attempting to enable fullscreen: ${err.message}`);
-        });
-      }
-    } else {
-      document.exitFullscreen();
-    }
+    setIsFullscreen(prev => !prev);
   }, []);
 
   // 监听全屏状态变化
@@ -263,32 +369,56 @@ export default function ProductPage() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // 在Design Section中添加内容
+  // 优化动画组件
+  const AnimatedSection = ({ 
+    children, 
+    show, 
+    delay = 0 
+  }: { 
+    children: React.ReactNode; 
+    show: boolean;
+    delay?: number;
+  }) => (
+    <motion.div
+      initial={false}
+      animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ 
+        duration: 0.6,
+        delay,
+        ease: [0.19, 1, 0.22, 1]
+      }}
+      className="will-change-transform"
+    >
+      {children}
+    </motion.div>
+  );
+
+  // 修改各个内容组件，使用 AnimatedSection
   const DesignContent = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
       {designFeatures.map((feature, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.2 }}
-          className="group relative"
+        <AnimatedSection 
+          key={index} 
+          show={currentSection === 1} 
+          delay={index * 0.1}
         >
-          <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-          <div className="relative p-8 rounded-2xl glass-card hover:border-gray-700 transition-all duration-500">
-            <div className="text-4xl mb-4 animate-float">{feature.icon}</div>
-            <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-            <p className="text-gray-400 mb-6">{feature.description}</p>
-            <ul className="space-y-3">
-              {feature.details.map((detail, i) => (
-                <li key={i} className="flex items-center text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-3"></span>
-                  {detail}
-                </li>
-              ))}
-            </ul>
+          <div className="group relative will-change-transform">
+            <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative p-8 rounded-2xl glass-card hover:border-gray-700 transition-all duration-300">
+              <div className="text-4xl mb-4 opacity-80">{feature.icon}</div>
+              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+              <p className="text-gray-400 mb-6">{feature.description}</p>
+              <ul className="space-y-3">
+                {feature.details.map((detail, i) => (
+                  <li key={i} className="flex items-center text-gray-400 group-hover:text-gray-300 transition-colors duration-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-3"></span>
+                    {detail}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </motion.div>
+        </AnimatedSection>
       ))}
     </div>
   );
@@ -297,28 +427,28 @@ export default function ProductPage() {
   const FeaturesContent = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
       {features.map((feature, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.2 }}
-          className="group relative"
+        <AnimatedSection 
+          key={index} 
+          show={currentSection === 3} 
+          delay={index * 0.2}
         >
-          <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-          <div className="relative p-8 rounded-2xl glass-card hover:border-gray-700 transition-all duration-500">
-            <div className="text-4xl mb-4 animate-float">{feature.icon}</div>
-            <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-            <p className="text-gray-400 mb-6">{feature.description}</p>
-            <ul className="space-y-3">
-              {feature.details.map((detail, i) => (
-                <li key={i} className="flex items-center text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-3"></span>
-                  {detail}
-                </li>
-              ))}
-            </ul>
+          <div className="group relative">
+            <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+            <div className="relative p-8 rounded-2xl glass-card hover:border-gray-700 transition-all duration-500">
+              <div className="text-4xl mb-4 opacity-80">{feature.icon}</div>
+              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+              <p className="text-gray-400 mb-6">{feature.description}</p>
+              <ul className="space-y-3">
+                {feature.details.map((detail, i) => (
+                  <li key={i} className="flex items-center text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-3"></span>
+                    {detail}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </motion.div>
+        </AnimatedSection>
       ))}
     </div>
   );
@@ -327,280 +457,169 @@ export default function ProductPage() {
   const ScenariosContent = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 max-w-5xl mx-auto">
       {scenarios.map((scenario, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: index * 0.2 }}
-          className="group relative"
+        <AnimatedSection 
+          key={index} 
+          show={currentSection === 4} 
+          delay={index * 0.2}
         >
-          <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-          <div className="relative p-8 rounded-2xl glass-card hover:border-gray-700 transition-all duration-500">
-            <div className="text-4xl mb-4 animate-float">{scenario.icon}</div>
-            <h3 className="text-xl font-semibold mb-2">{scenario.title}</h3>
-            <p className="text-gray-400 mb-6">{scenario.description}</p>
-            <ul className="space-y-3">
-              {scenario.details.map((detail, i) => (
-                <li key={i} className="flex items-center text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-3"></span>
-                  {detail}
-                </li>
-              ))}
-            </ul>
+          <div className="group relative">
+            <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+            <div className="relative p-8 rounded-2xl glass-card hover:border-gray-700 transition-all duration-500">
+              <div className="text-4xl mb-4 opacity-80">{scenario.icon}</div>
+              <h3 className="text-xl font-semibold mb-2">{scenario.title}</h3>
+              <p className="text-gray-400 mb-6">{scenario.description}</p>
+              <ul className="space-y-3">
+                {scenario.details.map((detail, i) => (
+                  <li key={i} className="flex items-center text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-3"></span>
+                    {detail}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </motion.div>
+        </AnimatedSection>
       ))}
     </div>
   );
 
-  // 在组件中添加规格部分的渲染
+  // 修改 SpecsContent 组件
   const SpecsContent = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <motion.div 
-        initial={{ opacity: 0, x: -20 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-6"
-      >
-        {Object.entries(specifications).slice(0, 2).map(([key, section]) => (
-          <div key={key} className="glass-card p-6 hover:scale-[1.02] transition-transform duration-300">
+      {Object.entries(specifications).map(([key, section], index) => (
+        <AnimatedSection 
+          key={key} 
+          show={currentSection === 2} 
+          delay={index * 0.1}
+        >
+          <div className="glass-card p-6 hover:scale-[1.01] transition-transform duration-200">
             <h3 className={`text-xl font-semibold mb-4 text-${section.color}-400`}>{section.title}</h3>
             <div className="space-y-4">
-              {section.specs.map((spec, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="flex justify-between items-center group"
+              {section.specs.map((spec, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between items-center group transition-colors duration-200"
                 >
-                  <span className="text-gray-400 group-hover:text-gray-300 transition-colors">
+                  <span className="text-gray-400 group-hover:text-gray-300">
                     {spec.label}
                   </span>
                   <span className="text-white font-medium">
                     {spec.value}
                   </span>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
-        ))}
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-6"
-      >
-        {Object.entries(specifications).slice(2).map(([key, section]) => (
-          <div key={key} className="glass-card p-6 hover:scale-[1.02] transition-transform duration-300">
-            <h3 className={`text-xl font-semibold mb-4 text-${section.color}-400`}>{section.title}</h3>
-            <div className="space-y-4">
-              {section.specs.map((spec, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="flex justify-between items-center group"
-                >
-                  <span className="text-gray-400 group-hover:text-gray-300 transition-colors">
-                    {spec.label}
-                  </span>
-                  <span className="text-white font-medium">
-                    {spec.value}
-                  </span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </motion.div>
+        </AnimatedSection>
+      ))}
     </div>
   );
 
-  return (
-    <main 
-      ref={containerRef}
-      className="h-screen overflow-hidden bg-black text-white relative"
-    >
-      {/* Navigation Dots */}
-      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50 space-y-4">
-        {sections.map((section, index) => (
-          <button
-            key={section.id}
-            onClick={() => setCurrentSection(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              currentSection === index 
-                ? 'bg-white scale-125' 
-                : 'bg-white/30 hover:bg-white/50'
-            }`}
-            aria-label={section.title}
-          />
-        ))}
-      </div>
+  // 修改背景渐变动画
+  const backgroundStyles = {
+    transition: 'background-position 15s ease-in-out',
+    backgroundSize: '200% 200%',
+    willChange: 'background-position',
+  };
 
-      {/* Sections Container */}
-      <div className="h-screen snap-y snap-mandatory overflow-y-auto">
-        {/* Overview Section */}
-        <section
-          ref={el => sectionsRef.current[0] = el}
-          className="relative h-screen snap-start flex items-center justify-center w-full"
-        >
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-b from-black via-black/50 to-black opacity-90 z-10"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-purple-900/10 to-blue-900/10 animate-gradient-x"></div>
-            <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-blue-500/20 via-transparent to-transparent blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 right-0 h-[500px] bg-gradient-to-t from-blue-900/20 via-transparent to-transparent blur-3xl"></div>
-          </div>
-          
-          <div className="container mx-auto px-6 relative z-20 max-w-7xl">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <span className="text-blue-400 text-sm tracking-wider font-medium animate-fade-in-up opacity-0" 
-                        style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-                    SMART ASSISTANT GLASSES
-                  </span>
-                  <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-                    <span className="inline-block animate-slide-up opacity-0" 
-                          style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
-                      智能辅助眼镜
-                    </span>
-                  </h1>
-                  <p className="text-xl text-gray-400 max-w-xl animate-fade-in-up opacity-0" 
-                     style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
-                    采用先进的AI技术和精密的硬件设计，为视障人士提供全方位的生活辅助体验
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 animate-fade-in-up opacity-0" 
-                     style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20">
-                    <div className="text-blue-400 font-semibold">12h</div>
-                    <div className="text-sm text-gray-400">续航时间</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20">
-                    <div className="text-purple-400 font-semibold">IP67</div>
-                    <div className="text-sm text-gray-400">防水等级</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-transparent border border-cyan-500/20">
-                    <div className="text-cyan-400 font-semibold">128g</div>
-                    <div className="text-sm text-gray-400">整机重量</div>
-                  </div>
-                </div>
+  return (
+    <div className="min-h-screen flex flex-col bg-black text-white overflow-hidden">
+      {/* Main Content */}
+      <main 
+        ref={containerRef}
+        className="flex-1 relative h-screen"
+      >
+        {/* Navigation Dots */}
+        <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50 space-y-4">
+          {sections.map((section, index) => (
+            <button
+              key={section.id}
+              onClick={() => setCurrentSection(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                currentSection === index 
+                  ? 'bg-white scale-125' 
+                  : 'bg-white/30 hover:bg-white/50'
+              }`}
+              aria-label={section.title}
+            />
+          ))}
+        </div>
+
+        {/* Sections Container */}
+        <div className="absolute inset-0">
+          {sections.map((section, index) => (
+            <div
+              key={section.id}
+              ref={el => sectionsRef.current[index] = el}
+              className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-out transform ${
+                index === currentSection 
+                  ? 'translate-y-0 opacity-100 visible pointer-events-auto' 
+                  : index < currentSection
+                    ? '-translate-y-full opacity-0 invisible pointer-events-none'
+                    : 'translate-y-full opacity-0 invisible pointer-events-none'
+              }`}
+              style={{
+                transitionProperty: 'transform, opacity, visibility',
+                willChange: 'transform, opacity'
+              }}
+            >
+              {/* Background */}
+              <div className="absolute inset-0" style={backgroundStyles}>
+                <div className="absolute inset-0 bg-gradient-to-b from-black via-black/50 to-black opacity-90 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-purple-900/10 to-blue-900/10"></div>
+                <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-blue-500/20 via-transparent to-transparent"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-[500px] bg-gradient-to-t from-blue-900/20 via-transparent to-transparent"></div>
               </div>
               
-              <div id="model-container" className="relative group">
-                <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative">
-                  <ModelViewer isFullscreen={isFullscreen} />
-                  <button
-                    onClick={handleFullscreen}
-                    className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 opacity-0 group-hover:opacity-100"
-                  >
-                    {isFullscreen ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                      </svg>
+              {/* Content */}
+              <div className="relative h-full flex items-center justify-center">
+                <div className="container mx-auto px-6 relative z-20 max-w-7xl">
+                  <AnimatedSection show={index === currentSection}>
+                    {/* Section Title */}
+                    <div className="text-center mb-12">
+                      <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                        {section.title}
+                      </h2>
+                    </div>
+                    {index === 0 && (
+                      <OverviewContent 
+                        handleFullscreen={handleFullscreen} 
+                        isFullscreen={isFullscreen}
+                      />
                     )}
-                  </button>
+                    {index === 1 && <DesignContent />}
+                    {index === 2 && <SpecsContent />}
+                    {index === 3 && <FeaturesContent />}
+                    {index === 4 && <ScenariosContent />}
+                  </AnimatedSection>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          ))}
+        </div>
+      </main>
 
-        {/* Design Section */}
-        <section
-          ref={el => sectionsRef.current[1] = el}
-          className="relative h-screen snap-start flex items-center justify-center w-full"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-black to-blue-900/20"></div>
-          <div className="container mx-auto px-6 relative z-20 max-w-7xl">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-16 space-y-4">
-                <motion.h2 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-4xl font-bold"
-                >
-                  精工设计，匠心打造
-                </motion.h2>
-                <motion.p 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-gray-400"
-                >
-                  每一处细节都经过精密计算与反复优化
-                </motion.p>
-              </div>
-              <DesignContent />
+      {/* Footer */}
+      <footer className="relative z-50 bg-black/50 backdrop-blur-sm border-t border-white/10">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-400">
+              © 2024 智能辅助眼镜. 保留所有权利.
             </div>
+            <nav className="space-x-6">
+              <a href="/" className="text-sm text-gray-400 hover:text-white transition-colors">
+                首页
+              </a>
+              <a href="/product" className="text-sm text-gray-400 hover:text-white transition-colors">
+                产品
+              </a>
+              <a href="/tech" className="text-sm text-gray-400 hover:text-white transition-colors">
+                技术规格
+              </a>
+            </nav>
           </div>
-        </section>
-
-        {/* Specs Section */}
-        <section
-          ref={el => sectionsRef.current[2] = el}
-          className="relative h-screen snap-start flex items-center justify-center w-full"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-purple-900/20"></div>
-          <div className="container mx-auto px-6 relative z-20 max-w-7xl">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-16 space-y-4">
-                <h2 className="text-4xl font-bold">技术规格</h2>
-                <p className="text-gray-400">强大的硬件性能，卓越的技术指标</p>
-              </div>
-
-              <SpecsContent />
-            </div>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section
-          ref={el => sectionsRef.current[3] = el}
-          className="relative h-screen snap-start flex items-center justify-center w-full"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-cyan-900/20"></div>
-          <div className="container mx-auto px-6 relative z-20 max-w-7xl">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-16 space-y-4">
-                <h2 className="text-4xl font-bold">核心功能</h2>
-                <p className="text-gray-400">智能化的辅助功能，提供全方位的生活帮助</p>
-              </div>
-
-              <FeaturesContent />
-            </div>
-          </div>
-        </section>
-
-        {/* Scenarios Section */}
-        <section
-          ref={el => sectionsRef.current[4] = el}
-          className="relative h-screen snap-start flex items-center justify-center w-full"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-cyan-900/20 to-black"></div>
-          <div className="container mx-auto px-6 relative z-20 max-w-7xl">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-16 space-y-4">
-                <h2 className="text-4xl font-bold">应用场景</h2>
-                <p className="text-gray-400">适应多种日常场景的智能辅助</p>
-              </div>
-
-              <ScenariosContent />
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
+        </div>
+      </footer>
+    </div>
   );
 } 

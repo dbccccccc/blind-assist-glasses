@@ -25,6 +25,8 @@ module.exports = {
         'glow': 'glow 4s ease-in-out infinite alternate',
         'float': 'float 6s ease-in-out infinite',
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'fade-in': 'fadeIn 0.5s ease-out forwards',
+        'slide-in-up': 'slideInUp 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards',
       },
       keyframes: {
         'gradient-x': {
@@ -115,6 +117,20 @@ module.exports = {
             transform: 'translateY(-10px)',
           },
         },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideInUp: {
+          '0%': { 
+            transform: 'translateY(100px)',
+            opacity: '0'
+          },
+          '100%': { 
+            transform: 'translateY(0)',
+            opacity: '1'
+          },
+        },
       },
       backdropBlur: {
         xs: '2px',
@@ -122,6 +138,14 @@ module.exports = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      transitionTimingFunction: {
+        'in-expo': 'cubic-bezier(0.95, 0.05, 0.795, 0.035)',
+        'out-expo': 'cubic-bezier(0.19, 1, 0.22, 1)',
+      },
+      transitionDuration: {
+        '1500': '1500ms',
+        '2000': '2000ms',
       },
     },
   },
@@ -179,6 +203,20 @@ module.exports = {
           },
         },
       })
+    },
+    function({ addUtilities }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        },
+        '.perspective': {
+          'perspective': '1000px',
+        },
+      });
     },
   ],
 } 
